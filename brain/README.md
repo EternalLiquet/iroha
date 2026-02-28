@@ -1,19 +1,36 @@
-# iroha-brain
+# Iroha Brain (FastAPI)
 
-FastAPI service that accepts a ChatEvent and returns a strict BrainResponse.
-Uses local Ollama for inference.
+The Brain service receives chat events and returns a strictly structured response for the orchestrator.
 
-## Run
+## Responsibilities
 
-```bash
-cd iroha/brain
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\Activate.ps1
+- Validate incoming chat payloads
+- Generate short responses via local Ollama
+- Return schema-safe JSON only
+- Fail safely on model errors
+- Emit structured logs (including latency)
 
-pip install -U pip
-pip install -e ".[dev]"
+## Run (Windows)
 
-cp .env.example .env
-
-uvicorn brain.main:app --host 127.0.0.1 --port 8000
+```powershell
+cd n:\Personal\Other\iroha\brain
+python -m uvicorn iroha_brain.main:app --host 127.0.0.1 --port 8001
 ```
+
+## Endpoints
+
+- `GET /health`
+- `POST /generate`
+
+## Observability
+
+`/generate` logs include:
+
+- request event
+- Ollama sub-latency
+- total request latency
+- response metadata
+
+## Notes
+
+If localhost requests hang, check for stale processes bound to port 8001.
