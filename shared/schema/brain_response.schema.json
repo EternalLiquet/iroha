@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BrainResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reply_text",
+    "should_speak",
+    "emotion",
+    "intensity",
+    "safe",
+    "refusal_reason"
+  ],
+  "properties": {
+    "reply_text": { "type": "string" },
+    "should_speak": { "type": "boolean" },
+    "emotion": { "type": "string" },
+    "intensity": { "type": "number" },
+    "safe": { "type": "boolean" },
+    "refusal_reason": { "type": ["string", "null"] }
+  }
+}
