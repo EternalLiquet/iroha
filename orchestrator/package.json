@@ -4,15 +4,19 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "demo": "tsx src/demo.ts"
+    "demo": "tsx src/demo.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/node": "^25.3.3",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
   },
   "engines": {
     "node": ">=18"
