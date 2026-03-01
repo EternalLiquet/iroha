@@ -5,7 +5,7 @@ The Brain service receives chat events and returns a strictly structured respons
 ## Responsibilities
 
 - Validate incoming chat payloads
-- Generate short responses via local Ollama
+- Generate short responses via local Ollama (async HTTP path)
 - Return schema-safe JSON only
 - Fail safely on model errors
 - Emit structured logs (including latency)
@@ -26,10 +26,19 @@ python -m uvicorn iroha_brain.main:app --host 127.0.0.1 --port 8001
 
 `/generate` logs include:
 
-- request event
-- Ollama sub-latency
-- total request latency
-- response metadata
+- `generate_request`
+- `generate_ollama_latency` (model call time only)
+- `generate_latency` (total request time)
+- `generate_response`
+
+## Output guardrails
+
+Before returning a response, the brain normalizes model output to keep behavior stable:
+
+- force single-line text
+- collapse extra whitespace
+- enforce max reply length
+- fallback reply if output is empty
 
 ## Notes
 

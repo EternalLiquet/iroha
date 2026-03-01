@@ -15,6 +15,15 @@ Health check:
 curl.exe -v --max-time 5 http://127.0.0.1:8001/health
 ```
 
+### Optional dev mode with auto-reload
+
+```
+python -m uvicorn iroha_brain.main:app --host 127.0.0.1 --port 8001 --reload
+```
+
+If requests hang after terminal restarts, a stale process may still own port 8001.
+Use the stale PID recovery steps below.
+
 ## Ollama checks
 
 ```
