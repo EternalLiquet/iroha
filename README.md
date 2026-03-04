@@ -84,7 +84,7 @@ cd iroha
 ### 2. Start the Brain (FastAPI)
 
 ```bash
-cd apps/brain
+cd brain
 
 python -m venv .venv
 # Windows:
@@ -100,7 +100,7 @@ uvicorn iroha_brain.main:app --reload --port 8001
 ### 3. Start the Orchestrator (Node)
 
 ```bash
-cd apps/orchestrator
+cd orchestrator
 npm install
 npm run dev
 ```
