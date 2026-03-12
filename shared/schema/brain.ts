@@ -23,3 +23,9 @@ export const ChatEventSchema = z
   .strict();
 
 export type ChatEvent = z.infer<typeof ChatEventSchema>;
+
+export const BrainGenerateRequestSchema = ChatEventSchema.extend({
+  request_id: z.string().min(1),
+}).strict();
+
+export type BrainGenerateRequest = z.infer<typeof BrainGenerateRequestSchema>;

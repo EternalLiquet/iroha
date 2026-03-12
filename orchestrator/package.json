@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "demo": "tsx src/demo.ts",
+    "smoke": "tsx src/smoke.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

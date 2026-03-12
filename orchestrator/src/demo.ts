@@ -1,12 +1,16 @@
 import "dotenv/config";
+import { randomUUID } from "crypto";
 import { decideResponse, type DeciderState } from "./decider";
 import { loadDeciderConfig } from "./config";
 import {
+  BrainGenerateRequestSchema,
   BrainResponseSchema,
   ChatEventSchema,
+  type BrainGenerateRequest,
   type BrainResponse,
   type ChatEvent,
 } from "@iroha/shared-schema";
+import { json } from "zod/v4/mini";
 
 const BRAIN_URL = process.env.BRAIN_URL ?? "http://127.0.0.1:8001";
 const GENERATE_URL = `${BRAIN_URL}/generate`;
@@ -44,32 +48,56 @@ const deciderState: DeciderState = {
 
 const deciderConfig = loadDeciderConfig();
 
+type StructuredLogFields = Record<string, unknown>;
+
+function logStructured(event: string, fields: StructuredLogFields): void {
+  console.log(JSON.stringify({ event, ...fields }));
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function callBrainGenerate(event: ChatEvent): Promise<BrainResponse> {
-  const response = await fetch(GENERATE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(event),
+async function callBrainGenerate(
+  requestId: string,
+  event: ChatEvent,
+): Promise<BrainResponse> {
+  const request: BrainGenerateRequest = BrainGenerateRequestSchema.parse({
+    request_id: requestId,
+    ...event,
   });
 
-  if (!response.ok) {
-    const bodyText = await response.text().catch(() => "");
-    throw new Error(
-      `Brain /generate failed: ${response.status} ${response.statusText} - ${bodyText}`,
-    );
-  }
+  const startedAt = performance.now();
+  let ok = false;
 
-  const json = await response.json();
-  const parsed = BrainResponseSchema.safeParse(json);
-  if (!parsed.success) {
-    throw new Error(
-      `Brain /generate response schema validation failed: ${parsed.error.message} - raw response: ${JSON.stringify(json)}`,
-    );
+  try {
+    const response = await fetch(GENERATE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const bodyText = await response.text().catch(() => "");
+      throw new Error(
+        `Brain /generate failed: ${response.status} ${response.statusText} - ${bodyText}`,
+      );
+    }
+
+    const payload = await response.json();
+    const parsed = BrainResponseSchema.parse(payload);
+
+    ok = true;
+    return parsed;
+  } finally {
+    logStructured("brain_call_latency", {
+      request_id: requestId,
+      user_id: event.user_id,
+      username: event.username,
+      latency_ms: Math.round(performance.now() - startedAt),
+      ok,
+    });
   }
-  return parsed.data;
 }
 
 async function main(): Promise<void> {
@@ -77,35 +105,39 @@ async function main(): Promise<void> {
   console.log("[demo] decider config:", deciderConfig);
 
   for (const rawEvent of demoEventsRaw) {
-    const eventResult = ChatEventSchema.safeParse(rawEvent);
-    if (!eventResult.success) {
-      console.error(
-        "[demo] invalid event schema, skipping event:",
-        rawEvent,
-        "error:",
-        eventResult.error.flatten(),
-      );
-      continue;
-    }
-    const event = eventResult.data;
+    const event = ChatEventSchema.parse(rawEvent);
 
     const nowMs = Date.now();
     const decision = decideResponse(event, nowMs, deciderState, deciderConfig);
 
-    console.log(`[decider]`, {
-      user: event.username,
-      shouldRespond: decision.shouldRespond,
+    const decisionLog = {
+      user_id: event.user_id,
+      username: event.username,
+      message_chars: event.message.length,
+      timestamp_ms: event.timestamp_ms,
+      should_respond: decision.shouldRespond,
       reason: decision.reason,
-    });
+      cooldown_ms: deciderConfig.cooldownMs,
+      min_message_chars: deciderConfig.minMessageChars,
+      respond_probability: deciderConfig.respondProbability,
+    };
 
     if (!decision.shouldRespond) {
+      logStructured("decider_decision", decisionLog);
       await sleep(250);
       continue;
     }
 
+    const requestId = randomUUID();
+
+    logStructured("decider_decision", {
+      ...decisionLog,
+      request_id: requestId,
+    });
+
     try {
       const started = Date.now();
-      const brainResponse = await callBrainGenerate(event);
+      const brainResponse = await callBrainGenerate(requestId, event);
       const latencyMs = Date.now() - started;
 
       deciderState.lastResponseAtMs = nowMs;

@@ -6,7 +6,7 @@ from time import perf_counter
 from fastapi import APIRouter
 
 from iroha_brain.core.config import settings
-from iroha_brain.models.schemas import BrainResponse, ChatEvent
+from iroha_brain.models.schemas import BrainResponse, BrainRequest
 from iroha_brain.services.ollama_client import OllamaClient
 
 router = APIRouter()
@@ -46,7 +46,7 @@ def health() -> dict[str, bool]:
 
 
 @router.post("/generate", response_model=BrainResponse)
-async def generate(evt: ChatEvent) -> BrainResponse:
+async def generate(request: BrainRequest) -> BrainResponse:
     started = perf_counter()
     outcome = "ok"
     should_speak = False
@@ -57,13 +57,20 @@ async def generate(evt: ChatEvent) -> BrainResponse:
         "Return plain text only.\n"
         "Reply in exactly ONE short sentence, max 120 characters\n"
         "No emojis, no markdown, no lists, no extra commentary, no line breaks\n"
-        f"Chat from {evt.username}: {evt.message}\n"
+        f"Chat from {request.username}: {request.message}\n"
         "Iroha reply:"
     )
 
     log.info(
         "generate_request",
-        extra={"extra": {"user_id": evt.user_id, "username": evt.username, "len": len(evt.message)}},
+        extra={
+            "extra": {
+                "request_id": request.request_id, 
+                "user_id": request.user_id, 
+                "username": request.username, 
+                "len": len(request.message)
+            }
+        },
     )
 
     try:
@@ -78,7 +85,13 @@ async def generate(evt: ChatEvent) -> BrainResponse:
         ollama_latency_ms = round((perf_counter() - ollama_started) * 1000, 2)
         log.info(
             "generate_ollama_latency",
-            extra={"extra": {"ollama_latency_ms": ollama_latency_ms, "outcome": "ok"}},
+            extra={
+                "extra": {
+                    "request_id": request.request_id, 
+                    "ollama_latency_ms": ollama_latency_ms, 
+                    "outcome": "ok"
+                }
+            },
         )
 
         reply = _normalize_reply(reply_raw)
@@ -112,6 +125,7 @@ async def generate(evt: ChatEvent) -> BrainResponse:
             "generate_latency",
             extra={
                 "extra": {
+                    "request_id": request.request_id, 
                     "latency_ms": latency_ms,
                     "ollama_latency_ms": ollama_latency_ms,
                     "outcome": outcome,
@@ -122,6 +136,13 @@ async def generate(evt: ChatEvent) -> BrainResponse:
 
     log.info(
         "generate_response",
-        extra={"extra": {"emotion": resp.emotion, "intensity": resp.intensity, "chars": len(resp.reply_text)}},
+        extra={
+            "extra": {
+                "request_id": request.request_id, 
+                "emotion": resp.emotion, 
+                "intensity": resp.intensity, 
+                "chars": len(resp.reply_text)
+            }
+        },
     )
     return resp

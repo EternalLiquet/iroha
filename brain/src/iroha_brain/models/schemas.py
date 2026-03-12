@@ -21,3 +21,12 @@ class BrainResponse(BaseModel):
     intensity: float
     safe: bool
     refusal_reason: str | None
+
+class BrainRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    request_id: str
+    user_id: str
+    username: str
+    message: str
+    timestamp_ms: int = Field(ge=0)

@@ -1,6 +1,8 @@
 export {
+  BrainGenerateRequestSchema,
   BrainResponseSchema,
   ChatEventSchema,
+  type BrainGenerateRequest,
   type BrainResponse,
   type ChatEvent,
 } from "./brain";
