@@ -94,7 +94,7 @@ python -m venv .venv
 
 pip install -e .
 
-uvicorn iroha_brain.main:app --reload --port 8001
+python -m uvicorn iroha_brain.main:app --host 127.0.0.1 --port 8001
 ```
 
 ### 3. Start the Orchestrator (Node)
