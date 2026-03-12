@@ -9,5 +9,5 @@
     "noEmit": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src/**/*.ts", "../shared/schema/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }

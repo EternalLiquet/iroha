@@ -6,7 +6,7 @@ import {
   ChatEventSchema,
   type BrainResponse,
   type ChatEvent,
-} from "./schema";
+} from "@iroha/shared-schema";
 
 const BRAIN_URL = process.env.BRAIN_URL ?? "http://127.0.0.1:8001";
 const GENERATE_URL = `${BRAIN_URL}/generate`;

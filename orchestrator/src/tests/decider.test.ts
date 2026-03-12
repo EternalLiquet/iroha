@@ -4,7 +4,7 @@ import {
   type DeciderConfig,
   type DeciderState,
 } from "../decider";
-import type { ChatEvent } from "../schema";
+import type { ChatEvent } from "@iroha/shared-schema";
 
 const BASE_CFG: DeciderConfig = {
   cooldownMs: 6000,

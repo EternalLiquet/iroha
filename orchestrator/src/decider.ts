@@ -1,4 +1,4 @@
-import type { ChatEvent } from "../../shared/schema/brain";
+import { ChatEvent } from "@iroha/shared-schema";
 
 export type DecisionReason =
   | "respond"
