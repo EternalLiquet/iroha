@@ -10,7 +10,6 @@ import {
   type BrainResponse,
   type ChatEvent,
 } from "@iroha/shared-schema";
-import { json } from "zod/v4/mini";
 
 const BRAIN_URL = process.env.BRAIN_URL ?? "http://127.0.0.1:8001";
 const GENERATE_URL = `${BRAIN_URL}/generate`;

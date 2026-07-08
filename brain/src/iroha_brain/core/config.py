@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     host: str = Field(default="127.0.0.1", alias="HOST")
-    port: int = Field(default=8000, alias="PORT", ge=1, le=65535)
+    port: int = Field(default=8001, alias="PORT", ge=1, le=65535)
 
 
 settings = Settings()
