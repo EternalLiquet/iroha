@@ -3,6 +3,7 @@
 The orchestrator runs real-time flow control in demo mode:
 
 - validate incoming chat event shape
+- consume chat events through a `ChatSource` boundary
 - run decider logic (respond or skip)
 - call brain `/generate`
 - validate brain response shape
@@ -38,6 +39,13 @@ Copy `.env.example` to `.env` and tune values:
 - `DECIDER_COOLDOWN_MS` (default: `6000`)
 - `DECIDER_MIN_MESSAGE_CHARS` (default: `3`)
 - `DECIDER_RESPOND_PROBABILITY` (default: `0.6`, clamped to `0..1`)
+
+## Chat sources
+
+Current demo mode uses `DemoChatSource`.
+
+Live integrations should implement the same `ChatSource` interface instead of
+adding platform-specific logic directly to the orchestration loop.
 
 ## Notes
 
