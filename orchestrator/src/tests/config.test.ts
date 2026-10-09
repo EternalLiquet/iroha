@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { loadDeciderConfig } from "../config";
+import { loadBrainTimeoutMs, loadDeciderConfig } from "../config";
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -67,4 +67,21 @@ describe("loadDeciderConfig", () => {
     expect(cfg.cooldownMs).toBe(0);
     expect(cfg.minMessageChars).toBe(1);
   });
+});
+
+describe("loadBrainTimeoutMs", () => {
+  it("uses a 30 second default and accepts a positive integer override", () => {
+    delete process.env.BRAIN_TIMEOUT_MS;
+    expect(loadBrainTimeoutMs()).toBe(30_000);
+    process.env.BRAIN_TIMEOUT_MS = "1200";
+    expect(loadBrainTimeoutMs()).toBe(1200);
+  });
+
+  it.each(["0", "-1", "1.5", "12ms", "Infinity", "abc", "2147483648"])(
+    "rejects invalid timeout %s",
+    (value) => {
+      process.env.BRAIN_TIMEOUT_MS = value;
+      expect(() => loadBrainTimeoutMs()).toThrow(/BRAIN_TIMEOUT_MS/);
+    },
+  );
 });
