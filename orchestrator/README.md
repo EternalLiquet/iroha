@@ -36,6 +36,7 @@ Current decider applies three gates:
 Copy `.env.example` to `.env` and tune values:
 
 - `BRAIN_URL` (default: `http://127.0.0.1:8001`)
+- `BRAIN_TIMEOUT_MS` (default: `30000`; positive integer milliseconds, maximum `2147483647`). The deadline covers connecting and reading the full response body. A timeout aborts the request and logs a failed brain call; the orchestrator then processes the next chat event. Failed calls do not start the response cooldown and are not retried automatically.
 - `DECIDER_COOLDOWN_MS` (default: `6000`)
 - `DECIDER_MIN_MESSAGE_CHARS` (default: `3`)
 - `DECIDER_RESPOND_PROBABILITY` (default: `0.6`, clamped to `0..1`)

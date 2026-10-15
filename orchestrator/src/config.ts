@@ -1,5 +1,26 @@
 import type { DeciderConfig } from "./decider";
 
+export const DEFAULT_BRAIN_TIMEOUT_MS = 30_000;
+export const MAX_BRAIN_TIMEOUT_MS = 2_147_483_647;
+
+export function loadBrainTimeoutMs(): number {
+  const raw = process.env.BRAIN_TIMEOUT_MS;
+  if (raw === undefined) return DEFAULT_BRAIN_TIMEOUT_MS;
+
+  const timeoutMs = Number(raw);
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs <= 0 ||
+    timeoutMs > MAX_BRAIN_TIMEOUT_MS ||
+    !/^\d+$/.test(raw)
+  ) {
+    throw new Error(
+      `BRAIN_TIMEOUT_MS must be an integer from 1 to ${MAX_BRAIN_TIMEOUT_MS} milliseconds`,
+    );
+  }
+  return timeoutMs;
+}
+
 function parseIntEnv(name: string, fallback: number): number {
   const raw = process.env[name];
   if (!raw) return fallback;

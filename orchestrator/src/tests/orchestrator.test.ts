@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { BrainResponse, ChatEvent } from "@iroha/shared-schema";
-import type { BrainClient } from "../brain-client";
+import { HttpBrainClient, type BrainClient } from "../brain-client";
 import type { ChatSource } from "../chat-source";
 import type { DeciderConfig, DeciderState } from "../decider";
 import { runOrchestrator, type StructuredLogFields } from "../orchestrator";
@@ -75,6 +75,47 @@ function createRuntime() {
 }
 
 describe("runOrchestrator", () => {
+  it("continues to the next chat event after a brain timeout without advancing cooldown", async () => {
+    vi.useFakeTimers();
+    try {
+      let callCount = 0;
+      const fetchImpl = vi.fn(async () => {
+        callCount += 1;
+        if (callCount === 1) return new Promise<Response>(() => {});
+        return new Response(JSON.stringify(BASE_RESPONSE));
+      }) as unknown as typeof fetch;
+      const errors: unknown[][] = [];
+      const deciderState: DeciderState = { lastResponseAtMs: null };
+      const run = runOrchestrator({
+        brainUrl: "http://brain.test",
+        brainClient: new HttpBrainClient("http://brain.test", fetchImpl, 100),
+        chatSource: new StaticChatSource([
+          chatEvent("first message"),
+          chatEvent("second message"),
+        ]),
+        deciderConfig: { ...RESPOND_CFG, cooldownMs: 60_000 },
+        deciderState,
+        eventDelayMs: 0,
+        runtime: { ...createRuntime(), nowMs: () => 10_000 },
+        console: { log: () => {}, error: (...args) => errors.push(args) },
+        logStructured: () => {},
+      });
+
+      await vi.advanceTimersByTimeAsync(100);
+      await expect(run).resolves.toEqual({
+        processedEvents: 2,
+        brainCalls: 1,
+        skippedEvents: 0,
+      });
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+      expect(errors).toHaveLength(1);
+      expect(deciderState.lastResponseAtMs).toBe(10_000);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("calls brain for responding events and skips rejected events", async () => {
     const brainClient = new RecordingBrainClient();
     const logs: { event: string; fields: StructuredLogFields }[] = [];
